@@ -542,6 +542,11 @@ variable "waf_policy" {
     condition     = length(distinct([for r in values(var.waf_policy.custom_rules) : r.priority])) == length(values(var.waf_policy.custom_rules))
     error_message = "waf_policy custom rule priorities must be unique."
   }
+
+  validation {
+    condition     = alltrue([for name in keys(var.waf_policy.custom_rules) : can(regex("^[a-zA-Z][a-zA-Z0-9]{0,127}$", name))])
+    error_message = "WAF custom rule names must be alphanumeric starting with a letter, no hyphens (Azure rejects them with ApplicationGatewayFirewallCustomRuleInvalidName)."
+  }
 }
 
 variable "zones" {

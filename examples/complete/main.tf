@@ -104,7 +104,7 @@ module "agfw" {
     }]
 
     custom_rules = {
-      "rate-limit-per-ip" = {
+      "RateLimitPerClientIp" = {
         priority             = 10
         rule_type            = "RateLimitRule"
         action               = "Block"
@@ -117,7 +117,7 @@ module "agfw" {
           match_values    = ["0.0.0.0/0"]
         }]
       }
-      "block-non-uk" = {
+      "BlockNonUk" = {
         priority  = 20
         rule_type = "MatchRule"
         action    = "Block"

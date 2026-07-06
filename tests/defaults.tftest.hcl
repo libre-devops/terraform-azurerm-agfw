@@ -225,3 +225,26 @@ run "rejects_byo_policy_with_create" {
 
   expect_failures = [var.firewall_policy_id, check.listeners_prefer_tls]
 }
+
+# Validation: WAF custom rule names are alphanumeric only (Azure rejects hyphens).
+run "rejects_hyphenated_custom_rule_name" {
+  command = plan
+
+  variables {
+    waf_policy = {
+      custom_rules = {
+        "block-non-uk" = {
+          priority = 10
+          action   = "Block"
+          match_conditions = [{
+            match_variables = [{ variable_name = "RemoteAddr" }]
+            operator        = "GeoMatch"
+            match_values    = ["GB"]
+          }]
+        }
+      }
+    }
+  }
+
+  expect_failures = [var.waf_policy, check.listeners_prefer_tls]
+}
