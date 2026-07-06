@@ -49,6 +49,14 @@ variable "backend_http_settings" {
     condition     = alltrue([for s in values(var.backend_http_settings) : s.probe_key == null || contains(keys(var.probes), coalesce(s.probe_key, "-"))])
     error_message = "every backend_http_settings probe_key must match a key in probes."
   }
+
+  validation {
+    condition = alltrue([
+      for s in values(var.backend_http_settings) :
+      s.probe_key == null || !try(coalesce(var.probes[s.probe_key].pick_host_name_from_backend_http_settings, false), false) || s.host_name != null || coalesce(s.pick_host_name_from_backend_address, false)
+    ])
+    error_message = "a probe with pick_host_name_from_backend_http_settings needs its backend http settings to pin a host_name or set pick_host_name_from_backend_address (Azure rejects it with ApplicationGatewayBackendHttpSettingsIncompatibleProbeSettingPickHostName)."
+  }
 }
 
 variable "backend_pools" {
@@ -209,7 +217,7 @@ variable "private_link_configurations" {
 }
 
 variable "probes" {
-  description = "Health probes keyed by probe name. protocol defaults to Http; host defaults to picking the backend http settings host (pick_host_name_from_backend_http_settings) unless a host is given."
+  description = "Health probes keyed by probe name. protocol defaults to Http; host defaults to localhost (Azure's default-probe convention). pick_host_name_from_backend_http_settings is only legal when every backend http settings referencing the probe pins a host_name or picks from the backend address, and that is validated."
   type = map(object({
     protocol                                  = optional(string, "Http")
     path                                      = optional(string, "/")

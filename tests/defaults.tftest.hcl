@@ -248,3 +248,19 @@ run "rejects_hyphenated_custom_rule_name" {
 
   expect_failures = [var.waf_policy, check.listeners_prefer_tls]
 }
+
+# Validation: a picking probe demands compatible backend http settings.
+run "rejects_incompatible_probe_pick_host" {
+  command = plan
+
+  variables {
+    probes = {
+      "app-health" = { pick_host_name_from_backend_http_settings = true }
+    }
+    backend_http_settings = {
+      "app-https" = { probe_key = "app-health" }
+    }
+  }
+
+  expect_failures = [var.backend_http_settings, check.listeners_prefer_tls]
+}

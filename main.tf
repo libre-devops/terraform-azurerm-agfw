@@ -265,9 +265,11 @@ resource "azurerm_application_gateway" "this" {
       name     = probe.key
       protocol = probe.value.protocol
       path     = probe.value.path
-      # Without an explicit host, pick it from the backend http settings (unless the caller chose).
-      host                                      = probe.value.host
-      pick_host_name_from_backend_http_settings = coalesce(probe.value.pick_host_name_from_backend_http_settings, probe.value.host == null)
+      # Azure only allows picking the host from the backend http settings when those settings pin a
+      # HostName or pick from the backend address, so the safe default is localhost (what Azure's
+      # own default probes use), not picking.
+      host                                      = coalesce(probe.value.pick_host_name_from_backend_http_settings, false) ? null : coalesce(probe.value.host, "localhost")
+      pick_host_name_from_backend_http_settings = coalesce(probe.value.pick_host_name_from_backend_http_settings, false)
       port                                      = probe.value.port
       interval                                  = probe.value.interval
       timeout                                   = probe.value.timeout
